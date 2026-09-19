@@ -1,0 +1,2351 @@
+Below is the complete, drop-in source for every file that is currently missing in your repo, plus the updated App.tsx so the new screens wire in. Everything matches your existing design tokens, classes, and component conventions (btn-yellow, card-sm, DominoTile, OncaMascot, Lilita One / Inter, pt-BR strings).
+
+I've grouped files by folder. Copy each block into the path shown.
+
+1. src/App.tsx — replace existing
+Adds all new screens to the router and passes callbacks down.
+
+tsx
+import { useState } from 'react'
+import HomeScreen from './screens/HomeScreen'
+import LobbyScreen from './screens/LobbyScreen'
+import MatchScreen from './screens/MatchScreen'
+import ResultScreen from './screens/ResultScreen'
+import DepositScreen from './screens/DepositScreen'
+import WithdrawScreen from './screens/WithdrawScreen'
+import RewardsScreen from './screens/RewardsScreen'
+import ProfileScreen from './screens/ProfileScreen'
+import WalletScreen from './screens/WalletScreen'
+import RankingScreen from './screens/RankingScreen'
+import PlinkoScreen from './screens/PlinkoScreen'
+import GamesHubScreen from './screens/GamesHubScreen'
+import ChatScreen from './screens/ChatScreen'
+import NotificationsScreen from './screens/NotificationsScreen'
+import SettingsScreen from './screens/SettingsScreen'
+import ResponsiblePlayScreen from './screens/ResponsiblePlayScreen'
+import KycScreen from './screens/KycScreen'
+import SupportScreen from './screens/SupportScreen'
+import TournamentsScreen from './screens/TournamentsScreen'
+import PromotionsScreen from './screens/PromotionsScreen'
+import FriendsScreen from './screens/FriendsScreen'
+import FirstRunSheet from './screens/FirstRunSheet'
+import TermsScreen from './screens/legal/TermsScreen'
+import PrivacyScreen from './screens/legal/PrivacyScreen'
+import BonusTermsScreen from './screens/legal/BonusTermsScreen'
+import GameRulesScreen from './screens/legal/GameRulesScreen'
+import FairnessScreen from './screens/legal/FairnessScreen'
+import LicenseScreen from './screens/legal/LicenseScreen'
+import AmlScreen from './screens/legal/AmlScreen'
+import ComplaintsScreen from './screens/legal/ComplaintsScreen'
+import AboutScreen from './screens/legal/AboutScreen'
+import BottomNav from './components/BottomNav'
+import SplashScreen from './screens/SplashScreen'
+
+export type Screen =
+  | 'splash' | 'firstRun'
+  | 'home' | 'games' | 'plinko'
+  | 'lobby' | 'match' | 'result' | 'ranking'
+  | 'deposit' | 'withdraw' | 'wallet'
+  | 'rewards' | 'tournaments' | 'promotions' | 'friends'
+  | 'chat' | 'profile' | 'notifications' | 'settings'
+  | 'responsible' | 'kyc' | 'support'
+  | 'terms' | 'privacy' | 'bonusTerms' | 'gameRules'
+  | 'fairness' | 'license' | 'aml' | 'complaints' | 'about'
+
+export type MatchResult = 'win' | 'loss' | 'draw'
+
+export default function App() {
+  const [screen, setScreen] = useState<Screen>('splash')
+  const [matchResult, setMatchResult] = useState<MatchResult>('win')
+  const [balance, setBalance] = useState(2480)
+  const [activeTab, setActiveTab] = useState<'home' | 'games' | 'rewards' | 'menu'>('home')
+
+  const navigate = (s: Screen) => setScreen(s)
+
+  const handleMatchEnd = (result: MatchResult) => {
+    setMatchResult(result)
+    if (result === 'win') setBalance(b => b + 450)
+    else if (result === 'loss') setBalance(b => b - 500)
+    navigate('result')
+  }
+
+  if (screen === 'splash') return <SplashScreen onDone={() => navigate('home')} />
+  if (screen === 'firstRun') return <FirstRunSheet onDone={() => navigate('home')} />
+
+  const showNav = !['match', 'result', 'lobby', 'kyc', 'chat'].includes(screen)
+
+  const navScreenMap: Record<string, Screen> = {
+    home: 'home', games: 'games', rewards: 'rewards', menu: 'profile',
+  }
+
+  return (
+    <div
+      className="relative flex flex-col h-screen overflow-hidden"
+      style={{ background: '#070A14', maxWidth: 480, margin: '0 auto' }}
+    >
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        {screen === 'home' && (
+          <HomeScreen balance={balance} onPlay={() => navigate('lobby')}
+            onDeposit={() => navigate('deposit')} onRanking={() => navigate('ranking')} />
+        )}
+        {screen === 'games' && <GamesHubScreen onBack={() => navigate('home')}
+          onDomino={() => navigate('lobby')} onPlinko={() => navigate('plinko')} />}
+        {screen === 'plinko' && <PlinkoScreen onBack={() => navigate('home')}
+          onDeposit={() => navigate('deposit')} />}
+        {screen === 'lobby' && <LobbyScreen balance={balance}
+          onBack={() => navigate('home')} onMatch={() => navigate('match')} />}
+        {screen === 'match' && <MatchScreen onEnd={handleMatchEnd} />}
+        {screen === 'result' && <ResultScreen result={matchResult} pot={500}
+          onRematch={() => navigate('match')} onExit={() => navigate('home')} />}
+        {screen === 'deposit' && <DepositScreen onBack={() => navigate('home')} />}
+        {screen === 'withdraw' && <WithdrawScreen onBack={() => navigate('wallet')}
+          onKyc={() => navigate('kyc')} />}
+        {screen === 'rewards' && <RewardsScreen onBack={() => navigate('home')} />}
+        {screen === 'tournaments' && <TournamentsScreen onBack={() => navigate('home')} />}
+        {screen === 'promotions' && <PromotionsScreen onBack={() => navigate('home')} />}
+        {screen === 'friends' && <FriendsScreen onBack={() => navigate('home')} />}
+        {screen === 'chat' && <ChatScreen onBack={() => navigate('home')} />}
+        {screen === 'profile' && <ProfileScreen balance={balance}
+          onBack={() => navigate('home')} onWallet={() => navigate('wallet')}
+          onFriends={() => navigate('friends')} onSettings={() => navigate('settings')}
+          onResponsible={() => navigate('responsible')} onSupport={() => navigate('support')} />}
+        {screen === 'wallet' && <WalletScreen onBack={() => navigate('profile')}
+          onWithdraw={() => navigate('withdraw')} onDeposit={() => navigate('deposit')} />}
+        {screen === 'ranking' && <RankingScreen onBack={() => navigate('home')} />}
+        {screen === 'notifications' && <NotificationsScreen onBack={() => navigate('home')} />}
+        {screen === 'settings' && <SettingsScreen onBack={() => navigate('profile')}
+          onLegal={(l) => navigate(l as Screen)} />}
+        {screen === 'responsible' && <ResponsiblePlayScreen onBack={() => navigate('profile')} />}
+        {screen === 'kyc' && <KycScreen onBack={() => navigate('withdraw')}
+          onDone={() => navigate('withdraw')} />}
+        {screen === 'support' && <SupportScreen onBack={() => navigate('profile')} />}
+        {screen === 'terms' && <TermsScreen onBack={() => navigate('settings')} />}
+        {screen === 'privacy' && <PrivacyScreen onBack={() => navigate('settings')} />}
+        {screen === 'bonusTerms' && <BonusTermsScreen onBack={() => navigate('settings')} />}
+        {screen === 'gameRules' && <GameRulesScreen onBack={() => navigate('settings')} />}
+        {screen === 'fairness' && <FairnessScreen onBack={() => navigate('settings')} />}
+        {screen === 'license' && <LicenseScreen onBack={() => navigate('settings')} />}
+        {screen === 'aml' && <AmlScreen onBack={() => navigate('settings')} />}
+        {screen === 'complaints' && <ComplaintsScreen onBack={() => navigate('settings')} />}
+        {screen === 'about' && <AboutScreen onBack={() => navigate('settings')} />}
+      </div>
+
+      {showNav && (
+        <BottomNav active={activeTab}
+          onChange={(tab) => { setActiveTab(tab); navigate(navScreenMap[tab] as Screen) }}
+          onDeposit={() => navigate('deposit')} />
+      )}
+    </div>
+  )
+}
+2. src/screens/FirstRunSheet.tsx
+tsx
+import { useState } from 'react'
+
+interface Props { onDone: () => void }
+
+export default function FirstRunSheet({ onDone }: Props) {
+  const [age, setAge] = useState(false)
+  const [terms, setTerms] = useState(false)
+  const [lang, setLang] = useState<'pt-BR' | 'en' | 'es'>('pt-BR')
+  const [sound, setSound] = useState(true)
+
+  const canContinue = age && terms
+
+  return (
+    <div className="fixed inset-0 flex flex-col" style={{ background: '#070A14', maxWidth: 480, margin: '0 auto' }}>
+      <div className="flex-1 flex flex-col justify-center px-6 gap-5">
+        <div className="flex flex-col items-center gap-2 mb-2">
+          <span style={{ fontSize: 56 }}>🁣</span>
+          <h1 style={{ fontFamily: 'Lilita One, cursive', fontSize: 32, color: '#FFFFFF' }}>Bem-vindo à BoraBet</h1>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#A9B0C6', textAlign: 'center' }}>
+            Antes de começar, confirme algumas coisas.
+          </p>
+        </div>
+
+        <label className="card-sm flex items-start gap-3" style={{ padding: 14, cursor: 'pointer' }}>
+          <input type="checkbox" checked={age} onChange={e => setAge(e.target.checked)}
+            style={{ marginTop: 2, width: 20, height: 20, accentColor: '#FFD93D' }} />
+          <div>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 14, color: '#FFFFFF' }}>
+              Confirmo que tenho 18 anos ou mais
+            </p>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#6E7691', marginTop: 2 }}>
+              É proibido para menores de idade.
+            </p>
+          </div>
+        </label>
+
+        <label className="card-sm flex items-start gap-3" style={{ padding: 14, cursor: 'pointer' }}>
+          <input type="checkbox" checked={terms} onChange={e => setTerms(e.target.checked)}
+            style={{ marginTop: 2, width: 20, height: 20, accentColor: '#FFD93D' }} />
+          <div>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 14, color: '#FFFFFF' }}>
+              Aceito os Termos e a Política de Privacidade
+            </p>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#6E7691', marginTop: 2 }}>
+              Ao continuar, você concorda com nossas regras.
+            </p>
+          </div>
+        </label>
+
+        <div className="card-sm" style={{ padding: 14 }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#FFFFFF', marginBottom: 8 }}>
+            Idioma
+          </p>
+          <div className="flex gap-2">
+            {(['pt-BR', 'en', 'es'] as const).map(l => (
+              <button key={l} onClick={() => setLang(l)}
+                style={{
+                  flex: 1, height: 36, borderRadius: 999,
+                  background: lang === l ? '#FFD93D' : 'transparent',
+                  border: lang === l ? 'none' : '1px solid rgba(255,255,255,0.08)',
+                  color: lang === l ? '#1A1400' : '#A9B0C6',
+                  fontFamily: lang === l ? 'Lilita One, cursive' : 'Inter, sans-serif',
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}>{l === 'pt-BR' ? 'Português' : l === 'en' ? 'English' : 'Español'}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="card-sm flex items-center justify-between" style={{ padding: 14 }}>
+          <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 14, color: '#FFFFFF' }}>
+            🔊 Sons do app
+          </span>
+          <button onClick={() => setSound(s => !s)}
+            style={{
+              width: 48, height: 28, borderRadius: 999,
+              background: sound ? '#3DDB5F' : '#1B2340',
+              border: '1px solid rgba(255,255,255,0.08)',
+              cursor: 'pointer', position: 'relative',
+            }}>
+            <span style={{
+              position: 'absolute', top: 3, left: sound ? 23 : 3,
+              width: 20, height: 20, borderRadius: '50%', background: '#fff',
+              transition: 'left 150ms',
+            }} />
+          </button>
+        </div>
+      </div>
+
+      <div className="px-6 pb-8">
+        <button className="btn-yellow glow-pulse" disabled={!canContinue}
+          style={{ width: '100%', height: 52, fontSize: 18 }} onClick={onDone}>
+          Bora!
+        </button>
+      </div>
+    </div>
+  )
+}
+3. src/screens/GamesHubScreen.tsx
+tsx
+import { ChevronLeft } from 'lucide-react'
+import DominoTile from '../components/DominoTile'
+
+interface Props { onBack: () => void; onDomino: () => void; onPlinko: () => void }
+
+export default function GamesHubScreen({ onBack, onDomino, onPlinko }: Props) {
+  return (
+    <div className="flex flex-col" style={{ background: '#0D1222', minHeight: '100%' }}>
+      <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+        style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+        <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+          <ChevronLeft size={24} color="#FFFFFF" />
+        </button>
+        <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 18, color: '#FFFFFF' }}>Jogos</span>
+        <div style={{ width: 44 }} />
+      </div>
+
+      <div className="flex flex-col gap-4 px-4 py-4 pb-6">
+        <h2 style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#6E7691', fontWeight: 600 }}>
+          POUCOS JOGOS, TODOS BONS
+        </h2>
+
+        {/* Domino */}
+        <button onClick={onDomino} className="relative overflow-hidden text-left"
+          style={{
+            height: 200, borderRadius: 24,
+            background: 'radial-gradient(ellipse at 55% 40%, #0E7A4B 0%, #063D28 100%)',
+            border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', padding: 20,
+          }}>
+          <div className="absolute" style={{ top: 16, right: 16, transform: 'rotate(12deg)' }}>
+            <DominoTile top={6} bottom={6} size="lg" />
+          </div>
+          <div className="absolute" style={{ bottom: 24, right: 100, transform: 'rotate(-6deg)', opacity: 0.7 }}>
+            <DominoTile top={5} bottom={3} size="md" />
+          </div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="live-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: '#3DDB5F', display: 'inline-block' }} />
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#FFFFFF', fontWeight: 500 }}>284 jogando</span>
+          </div>
+          <h3 style={{ fontFamily: 'Lilita One, cursive', fontSize: 28, color: '#FFFFFF', marginTop: 44 }}>Dominó 1v1</h3>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#A9B0C6', marginTop: 4 }}>Vencedor leva o pote · 10% comissão</p>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691', marginTop: 8 }}>RTP 97% · Regras ⓘ</p>
+        </button>
+
+        {/* Plinko */}
+        <button onClick={onPlinko} className="relative overflow-hidden text-left"
+          style={{
+            height: 200, borderRadius: 24,
+            background: 'radial-gradient(ellipse at 55% 40%, #5B3DF5 0%, #1C1466 100%)',
+            border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', padding: 20,
+          }}>
+          <div className="absolute" style={{ top: 20, right: 30, opacity: 0.9 }}>
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              {[0, 1, 2, 3, 4, 5, 6].map(row =>
+                Array.from({ length: row + 2 }, (_, col) => (
+                  <circle key={`${row}-${col}`} cx={20 + col * 15} cy={15 + row * 15} r="3" fill="#FFD93D" opacity="0.7" />
+                ))
+              )}
+              <circle cx="60" cy="90" r="7" fill="#FFD93D" style={{ filter: 'drop-shadow(0 0 8px #FFD93D)' }} />
+            </svg>
+          </div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="live-dot" style={{ width: 8, height: 8, borderRadius: '50%', background: '#FFD93D', display: 'inline-block' }} />
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#FFFFFF', fontWeight: 500 }}>189 jogando</span>
+          </div>
+          <h3 style={{ fontFamily: 'Lilita One, cursive', fontSize: 28, color: '#FFFFFF', marginTop: 44 }}>Plinko</h3>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#A9B0C6', marginTop: 4 }}>Solte a bola e multiplique</p>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691', marginTop: 8 }}>RTP 99% · Até 1000×</p>
+        </button>
+
+        {/* Coming soon */}
+        <div className="card-sm flex items-center gap-3"
+          style={{ padding: 16, opacity: 0.75, borderStyle: 'dashed' }}>
+          <span style={{ fontSize: 36, filter: 'grayscale(1)' }}>🎰</span>
+          <div className="flex-1">
+            <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 14, color: '#FFFFFF' }}>
+              Novo jogo em breve
+            </p>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#6E7691', marginTop: 2 }}>
+              Estamos preparando algo especial
+            </p>
+          </div>
+          <button className="btn-secondary" style={{ height: 36, paddingLeft: 14, paddingRight: 14, fontSize: 12 }}>
+            Avise-me
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+4. src/screens/PlinkoScreen.tsx
+tsx
+import { useState, useEffect } from 'react'
+import { ChevronLeft, Volume2, Info, Pause } from 'lucide-react'
+
+interface Props { onBack: () => void; onDeposit: () => void }
+
+type Risk = 'low' | 'med' | 'high'
+type Mode = 'manual' | 'auto'
+
+const MULTIPLIERS: Record<Risk, number[]> = {
+  low:  [5.6, 2.1, 1.1, 1.0, 0.5, 1.0, 1.1, 2.1, 5.6],
+  med:  [13, 3, 1.3, 0.7, 0.4, 0.7, 1.3, 3, 13],
+  high: [29, 4, 1.5, 0.3, 0.2, 0.3, 1.5, 4, 29],
+}
+const BIN_COLORS = ['#8B4DFF', '#5B3DF5', '#3B7BFF', '#FFD93D', '#F2B705', '#FFD93D', '#3B7BFF', '#5B3DF5', '#8B4DFF']
+
+export default function PlinkoScreen({ onBack, onDeposit }: Props) {
+  const [bet, setBet] = useState(50)
+  const [risk, setRisk] = useState<Risk>('med')
+  const [mode, setMode] = useState<Mode>('manual')
+  const [balance, setBalance] = useState(2480)
+  const [history, setHistory] = useState<{ m: number; win: boolean }[]>([])
+  const [dropping, setDropping] = useState(false)
+  const [lastBin, setLastBin] = useState<number | null>(null)
+  const [auto, setAuto] = useState({ count: 0, stopProfit: 0, stopLoss: 0 })
+
+  const mults = MULTIPLIERS[risk]
+
+  const drop = () => {
+    if (balance < bet) return
+    setDropping(true)
+    setBalance(b => b - bet)
+    // Simulated outcome
+    const bin = Math.floor(Math.random() * mults.length)
+    const m = mults[bin]
+    setLastBin(bin)
+    setTimeout(() => {
+      setDropping(false)
+      const win = m >= 1
+      setHistory(h => [{ m, win }, ...h].slice(0, 20))
+      if (win) setBalance(b => b + Math.floor(bet * m))
+    }, 2200)
+  }
+
+  useEffect(() => {
+    if (mode === 'auto' && auto.count > 0 && !dropping) {
+      const t = setTimeout(() => { drop(); setAuto(a => ({ ...a, count: a.count - 1 })) }, 400)
+      return () => clearTimeout(t)
+    }
+  }, [mode, auto.count, dropping])
+
+  return (
+    <div className="flex flex-col" style={{ background: '#0D1222', minHeight: '100%' }}>
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+        style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+        <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+          <ChevronLeft size={24} color="#FFFFFF" />
+        </button>
+        <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 18, color: '#FFFFFF' }}>Plinko</span>
+        <div className="flex items-center gap-1">
+          <button style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Som">
+            <Volume2 size={18} color="#A9B0C6" />
+          </button>
+          <button style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Pausa">
+            <Pause size={18} color="#A9B0C6" />
+          </button>
+          <button style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Info">
+            <Info size={18} color="#A9B0C6" />
+          </button>
+        </div>
+      </div>
+
+      {/* Balance strip */}
+      <div className="flex items-center justify-between px-4 py-2"
+        style={{ background: '#0D1222', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="flex items-center gap-2">
+          <span style={{ fontSize: 14 }}>🪙</span>
+          <span className="font-tabular" style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 14, color: '#FFFFFF' }}>
+            {balance.toLocaleString('pt-BR')} BC
+          </span>
+        </div>
+        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#6E7691' }}>
+          Resultado da sessão: <span style={{ color: '#3DDB5F' }}>+{Math.max(0, 120).toLocaleString('pt-BR')} BC</span>
+        </span>
+      </div>
+
+      {/* Board */}
+      <div className="relative" style={{ background: 'radial-gradient(ellipse at 50% 30%, #1C1466 0%, #0A0820 100%)', height: 380 }}>
+        <svg viewBox="0 0 360 380" style={{ width: '100%', height: '100%' }}>
+          {/* Pegs — 9 rows */}
+          {Array.from({ length: 9 }, (_, row) =>
+            Array.from({ length: row + 2 }, (_, col) => {
+              const x = 180 + (col - (row + 1) / 2) * 32
+              const y = 40 + row * 34
+              return <circle key={`${row}-${col}`} cx={x} cy={y} r="2.5" fill="#FFFFFF" opacity="0.5" />
+            })
+          )}
+          {/* Bins */}
+          {mults.map((m, i) => {
+            const x = 20 + i * 40
+            return (
+              <g key={i}>
+                <rect x={x} y={350} width={36} height={22} rx={6} fill={BIN_COLORS[i]}
+                  opacity={lastBin === i ? 1 : 0.75}
+                  style={{ filter: lastBin === i ? 'drop-shadow(0 0 10px currentColor)' : 'none' }} />
+                <text x={x + 18} y={365} textAnchor="middle" fontSize="10"
+                  fontFamily="Lilita One" fill="#0D1222" fontWeight="bold">
+                  {m}×
+                </text>
+              </g>
+            )
+          })}
+          {/* Ball */}
+          {dropping && (
+            <circle cx="180" cy="80" r="7" fill="#FFD93D"
+              style={{ filter: 'drop-shadow(0 0 12px #FFD93D)' }}>
+              <animate attributeName="cy" from="40" to="350" dur="2.2s" fill="freeze" />
+              <animate attributeName="cx" values="180;196;164;180;196;180;212;180" dur="2.2s" fill="freeze" />
+            </circle>
+          )}
+        </svg>
+      </div>
+
+      {/* History strip */}
+      <div className="flex gap-1 px-4 py-2 overflow-x-auto"
+        style={{ background: '#0D1222', borderTop: '1px solid rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+        {history.length === 0 && (
+          <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691' }}>Sem resultados ainda</span>
+        )}
+        {history.map((h, i) => (
+          <span key={i} style={{
+            flexShrink: 0, padding: '2px 8px', borderRadius: 8,
+            background: h.win ? 'rgba(61,219,95,0.15)' : 'rgba(240,66,75,0.15)',
+            color: h.win ? '#3DDB5F' : '#F0424B',
+            fontFamily: 'Inter, sans-serif', fontSize: 11, fontWeight: 600,
+          }}>{h.m}×</span>
+        ))}
+      </div>
+
+      {/* Bet panel */}
+      <div className="flex flex-col gap-3 px-4 py-4 pb-8">
+        {/* Mode tabs */}
+        <div className="flex gap-2">
+          {(['manual', 'auto'] as const).map(m => (
+            <button key={m} onClick={() => setMode(m)}
+              style={{
+                flex: 1, height: 36, borderRadius: 999,
+                background: mode === m ? '#FFD93D' : '#1B2340',
+                border: mode === m ? 'none' : '1px solid rgba(255,255,255,0.06)',
+                color: mode === m ? '#1A1400' : '#A9B0C6',
+                fontFamily: mode === m ? 'Lilita One, cursive' : 'Inter, sans-serif',
+                fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              }}>{m === 'manual' ? 'Manual' : 'Auto'}</button>
+          ))}
+        </div>
+
+        {/* Bet amount */}
+        <div style={{ background: '#1B2340', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '12px 16px' }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691', marginBottom: 6 }}>Aposta (BC)</p>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setBet(b => Math.max(1, Math.floor(b / 2)))}
+              style={{ width: 32, height: 32, borderRadius: 8, background: '#141A2E', border: 'none', color: '#FFF', cursor: 'pointer' }}>½</button>
+            <input type="number" value={bet} onChange={e => setBet(Number(e.target.value))}
+              className="font-tabular"
+              style={{ flex: 1, background: 'none', border: 'none', outline: 'none',
+                fontFamily: 'Lilita One, cursive', fontSize: 22, color: '#FFFFFF', textAlign: 'center' }} />
+            <button onClick={() => setBet(b => b * 2)}
+              style={{ width: 32, height: 32, borderRadius: 8, background: '#141A2E', border: 'none', color: '#FFF', cursor: 'pointer' }}>2×</button>
+          </div>
+          <div className="flex gap-2 mt-2">
+            {[10, 50, 100, 500].map(v => (
+              <button key={v} onClick={() => setBet(v)} className="btn-secondary flex-1"
+                style={{ height: 30, fontSize: 12 }}>{v}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Risk */}
+        <div>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691', marginBottom: 6 }}>Risco</p>
+          <div className="flex gap-2">
+            {(['low', 'med', 'high'] as const).map(r => (
+              <button key={r} onClick={() => setRisk(r)}
+                style={{
+                  flex: 1, height: 36, borderRadius: 999,
+                  background: risk === r ? '#3B7BFF' : '#1B2340',
+                  border: risk === r ? 'none' : '1px solid rgba(255,255,255,0.06)',
+                  color: risk === r ? '#FFF' : '#A9B0C6',
+                  fontFamily: 'Inter, sans-serif', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}>{r === 'low' ? 'Baixo' : r === 'med' ? 'Médio' : 'Alto'}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Auto controls */}
+        {mode === 'auto' && (
+          <div className="card-sm" style={{ padding: 14 }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691', marginBottom: 6 }}>
+              Número de rodadas
+            </p>
+            <div className="flex gap-2">
+              {[10, 25, 50, 100].map(n => (
+                <button key={n} onClick={() => setAuto(a => ({ ...a, count: n }))}
+                  className="btn-secondary flex-1"
+                  style={{ height: 32, fontSize: 12, border: auto.count === n ? '1px solid #FFD93D' : undefined }}>{n}</button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Drop button */}
+        {balance < bet ? (
+          <button className="btn-yellow" style={{ height: 56, fontSize: 17 }} onClick={onDeposit}>
+            Saldo insuficiente · Depositar
+          </button>
+        ) : (
+          <button className="btn-yellow glow-pulse" disabled={dropping}
+            style={{ height: 56, fontSize: 18 }} onClick={drop}>
+            {dropping ? 'Caindo…' : mode === 'auto' ? `Soltar ${auto.count || 10} bolas` : 'Soltar bola'}
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+5. src/screens/WithdrawScreen.tsx
+tsx
+import { useState } from 'react'
+import { ChevronLeft, Plus } from 'lucide-react'
+
+interface Props { onBack: () => void; onKyc: () => void }
+
+type Status = 'idle' | 'requested' | 'review' | 'sent' | 'done'
+
+const SAVED = [
+  { id: 1, asset: 'USDT', network: 'TRON', address: 'TQn9Y2kh…Rm1oG', verified: true },
+  { id: 2, asset: 'TON', network: 'TON', address: 'UQBF…z7Kq', verified: true },
+]
+
+export default function WithdrawScreen({ onBack, onKyc }: Props) {
+  const [kycVerified] = useState(false)
+  const [amount, setAmount] = useState(1000)
+  const [selected, setSelected] = useState<number | null>(1)
+  const [status, setStatus] = useState<Status>('idle')
+
+  const fmt = (n: number) => n.toLocaleString('pt-BR')
+  const fmtBRL = (n: number) => (n / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  const fee = 20
+  const receive = amount - fee
+
+  if (!kycVerified) {
+    return (
+      <div className="flex flex-col" style={{ background: '#0D1222', minHeight: '100%' }}>
+        <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+          style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+          <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+            <ChevronLeft size={24} color="#FFFFFF" />
+          </button>
+          <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 18, color: '#FFFFFF' }}>Sacar</span>
+          <div style={{ width: 44 }} />
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6">
+          <span style={{ fontSize: 64 }}>🔒</span>
+          <h2 style={{ fontFamily: 'Lilita One, cursive', fontSize: 24, color: '#FFFFFF', textAlign: 'center' }}>
+            Verifique sua conta
+          </h2>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#A9B0C6', textAlign: 'center', maxWidth: 300 }}>
+            Para sacar, precisamos confirmar sua identidade. Leva cerca de 2 minutos.
+          </p>
+          <button className="btn-yellow" style={{ height: 52, paddingLeft: 32, paddingRight: 32, fontSize: 16, marginTop: 12 }} onClick={onKyc}>
+            Verificar conta
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (status !== 'idle') {
+    const steps: { id: Status; label: string; desc: string; time?: string }[] = [
+      { id: 'requested', label: 'Solicitado', desc: 'Aguardando processamento', time: 'Agora' },
+      { id: 'review', label: 'Em análise', desc: 'Normalmente até 30 min' },
+      { id: 'sent', label: 'Enviado', desc: 'TX: 0xa3f…9c2' },
+      { id: 'done', label: 'Concluído', desc: 'Crédito na sua carteira' },
+    ]
+    const order: Status[] = ['requested', 'review', 'sent', 'done']
+    const idx = order.indexOf(status)
+
+    return (
+      <div className="flex flex-col" style={{ background: '#0D1222', minHeight: '100%' }}>
+        <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+          style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+          <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+            <ChevronLeft size={24} color="#FFFFFF" />
+          </button>
+          <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 18, color: '#FFFFFF' }}>Saque</span>
+          <div style={{ width: 44 }} />
+        </div>
+        <div className="flex flex-col gap-4 px-4 py-4 pb-6">
+          <h3 style={{ fontFamily: 'Lilita One, cursive', fontSize: 20, color: '#FFFFFF' }}>Status do saque</h3>
+          <div className="card" style={{ padding: 20 }}>
+            {steps.map((s, i) => {
+              const done = order.indexOf(s.id) < idx
+              const active = s.id === status
+              return (
+                <div key={s.id} className="flex gap-4" style={{ marginBottom: i < steps.length - 1 ? 20 : 0 }}>
+                  <div className="flex flex-col items-center">
+                    <div style={{
+                      width: 24, height: 24, borderRadius: '50%',
+                      background: done ? '#3DDB5F' : active ? '#FFD93D' : '#1B2340',
+                      border: active ? '2px solid #FFD93D' : 'none',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: active ? '0 0 12px rgba(255,217,61,0.4)' : done ? '0 0 8px rgba(61,219,95,0.3)' : 'none',
+                    }}>{done && <span style={{ fontSize: 12, color: '#0A2416' }}>✓</span>}</div>
+                    {i < steps.length - 1 && (
+                      <div style={{ width: 2, flex: 1, background: done ? '#3DDB5F' : 'rgba(255,255,255,0.08)', minHeight: 20, marginTop: 4 }} />
+                    )}
+                  </div>
+                  <div style={{ paddingTop: 2 }}>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: 14,
+                      color: active ? '#FFFFFF' : done ? '#3DDB5F' : '#6E7691' }}>{s.label}</p>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#6E7691', marginTop: 2 }}>
+                      {s.desc}{s.time && ` · ${s.time}`}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          {status === 'requested' && (
+            <button className="btn-secondary" style={{ height: 48 }}>Cancelar solicitação</button>
+          )}
+          {status === 'done' && (
+            <button className="btn-yellow" style={{ height: 52, fontSize: 17 }} onClick={onBack}>Voltar à carteira</button>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col" style={{ background: '#0D1222', minHeight: '100%' }}>
+      <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+        style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+        <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+          <ChevronLeft size={24} color="#FFFFFF" />
+        </button>
+        <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 18, color: '#FFFFFF' }}>Sacar</span>
+        <div style={{ width: 44 }} />
+      </div>
+
+      <div className="flex flex-col gap-4 px-4 py-4 pb-6">
+        {/* Amount */}
+        <div className="card" style={{ padding: 20 }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#6E7691', marginBottom: 8 }}>
+            Quanto deseja sacar?
+          </p>
+          <div className="flex items-center gap-2 mb-2">
+            <input type="number" value={amount} onChange={e => setAmount(Number(e.target.value))}
+              className="font-tabular"
+              style={{ flex: 1, background: 'none', border: 'none', outline: 'none',
+                fontFamily: 'Lilita One, cursive', fontSize: 32, color: '#FFFFFF' }} />
+            <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 18, color: '#A9B0C6' }}>BC</span>
+          </div>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#A9B0C6', marginBottom: 12 }}>
+            ≈ {fmtBRL(amount)}
+          </p>
+          <div className="flex gap-2">
+            {[500, 1000, 2000, 5000].map(v => (
+              <button key={v} onClick={() => setAmount(v)} className="btn-secondary flex-1"
+                style={{ height: 32, fontSize: 12, border: amount === v ? '1px solid #FFD93D' : undefined }}>
+                {fmt(v)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Address */}
+        <div>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#6E7691', marginBottom: 8 }}>
+            Endereço de destino
+          </p>
+          {SAVED.map(s => (
+            <button key={s.id} onClick={() => setSelected(s.id)}
+              className="card-sm flex items-center gap-3 w-full text-left"
+              style={{ padding: 14, marginBottom: 8, cursor: 'pointer',
+                border: selected === s.id ? '2px solid #FFD93D' : undefined }}>
+              <span style={{ fontSize: 24 }}>{s.asset === 'USDT' ? '💵' : '💎'}</span>
+              <div className="flex-1">
+                <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 14, color: '#FFFFFF' }}>
+                  {s.asset} · {s.network}
+                </p>
+                <p style={{ fontFamily: 'monospace', fontSize: 12, color: '#6E7691', marginTop: 2 }}>{s.address}</p>
+              </div>
+              {s.verified && <span style={{ fontSize: 12, color: '#3DDB5F' }}>✓</span>}
+            </button>
+          ))}
+          <button className="card-sm flex items-center gap-2 w-full"
+            style={{ padding: 14, cursor: 'pointer', borderStyle: 'dashed' }}>
+            <Plus size={16} color="#A9B0C6" />
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#A9B0C6' }}>
+              Novo endereço (aguarda 24h)
+            </span>
+          </button>
+        </div>
+
+        {/* Summary */}
+        <div className="card" style={{ padding: 16 }}>
+          {[
+            ['Valor solicitado', `${fmt(amount)} BC`],
+            ['Taxa de rede', `−${fmt(fee)} BC`],
+            ['Você recebe', `${fmt(receive)} BC`],
+            ['Cotação', '100 BC = R$ 1,00'],
+          ].map(([k, v], i) => (
+            <div key={i} className="flex justify-between py-2"
+              style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#A9B0C6' }}>{k}</span>
+              <span className="font-tabular" style={{ fontFamily: 'Inter, sans-serif', fontSize: 13,
+                color: i === 2 ? '#3DDB5F' : '#FFFFFF', fontWeight: 600 }}>{v}</span>
+            </div>
+          ))}
+        </div>
+
+        <button className="btn-yellow" style={{ height: 52, fontSize: 17 }}
+          onClick={() => { setStatus('requested'); setTimeout(() => setStatus('review'), 2000); setTimeout(() => setStatus('sent'), 5000); setTimeout(() => setStatus('done'), 8000) }}>
+          Solicitar saque
+        </button>
+      </div>
+    </div>
+  )
+}
+6. src/screens/ChatScreen.tsx
+tsx
+import { useState, useEffect, useRef } from 'react'
+import { ChevronLeft, Send } from 'lucide-react'
+
+interface Props { onBack: () => void }
+
+interface Message {
+  id: number
+  user: string
+  avatar: string
+  role?: 'master' | 'mod' | 'vip'
+  text: string
+  time: string
+}
+
+const SEED: Message[] = [
+  { id: 1, user: 'Carlos M.', avatar: '🦁', role: 'vip', text: 'Boa noite pessoal! Bora de dominó?', time: '22:01' },
+  { id: 2, user: 'Fernanda L.', avatar: '🌟', text: 'Acabei de ganhar 1.240 BC 🎉', time: '22:02' },
+  { id: 3, user: 'Mod Diego', avatar: '🛡️', role: 'mod', text: 'Lembrando: sem links e sem spam. Boa sorte a todos!', time: '22:03' },
+  { id: 4, user: 'Ana P.', avatar: '🎯', text: 'Alguém na mesa 2?', time: '22:04' },
+  { id: 5, user: 'Master', avatar: '👑', role: 'master', text: 'Chuva de moedas em 5 minutos! Fiquem ligados 🪙', time: '22:05' },
+]
+
+const RAIN_SECONDS = 30
+
+export default function ChatScreen({ onBack }: Props) {
+  const [messages, setMessages] = useState<Message[]>(SEED)
+  const [input, setInput] = useState('')
+  const [rain, setRain] = useState(false)
+  const [rainLeft, setRainLeft] = useState(RAIN_SECONDS)
+  const [claimed, setClaimed] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 999999, behavior: 'smooth' })
+  }, [messages])
+
+  useEffect(() => {
+    if (!rain) return
+    if (rainLeft <= 0) { setRain(false); return }
+    const t = setTimeout(() => setRainLeft(n => n - 1), 1000)
+    return () => clearTimeout(t)
+  }, [rain, rainLeft])
+
+  const send = () => {
+    if (!input.trim()) return
+    setMessages(m => [...m, {
+      id: m.length + 1, user: 'Você', avatar: '😊',
+      text: input.trim(), time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    }])
+    setInput('')
+  }
+
+  const roleBadge = (role?: string) => {
+    if (role === 'master') return { text: 'MASTER', bg: '#FFD93D', fg: '#1A1400' }
+    if (role === 'mod') return { text: 'MOD', bg: '#3DDB5F', fg: '#0A2416' }
+    if (role === 'vip') return { text: 'VIP', bg: '#8B4DFF', fg: '#FFF' }
+    return null
+  }
+
+  return (
+    <div className="flex flex-col" style={{ background: '#0D1222', height: '100vh', maxWidth: 480, margin: '0 auto' }}>
+      {/* Top bar */}
+      <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+        style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+        <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+          <ChevronLeft size={24} color="#FFFFFF" />
+        </button>
+        <div className="flex flex-col items-center">
+          <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 16, color: '#FFFFFF' }}>Chat global</span>
+          <div className="flex items-center gap-1">
+            <span className="live-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: '#3DDB5F', display: 'inline-block' }} />
+            <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691' }}>284 online</span>
+          </div>
+        </div>
+        <button onClick={() => { setRain(true); setRainLeft(RAIN_SECONDS); setClaimed(false) }}
+          style={{ padding: '6px 12px', borderRadius: 999, background: '#1B2340', border: '1px solid rgba(255,217,61,0.3)',
+            color: '#FFD93D', fontFamily: 'Inter, sans-serif', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+          🪙 Chuva
+        </button>
+      </div>
+
+      {/* Messages */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
+        {messages.map(m => {
+          const badge = roleBadge(m.role)
+          return (
+            <div key={m.id} className="flex gap-3">
+              <div style={{
+                width: 32, height: 32, borderRadius: '50%', background: '#1B2340',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+                flexShrink: 0,
+              }}>{m.avatar}</div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#FFFFFF' }}>
+                    {m.user}
+                  </span>
+                  {badge && (
+                    <span style={{
+                      background: badge.bg, color: badge.fg, borderRadius: 6,
+                      padding: '1px 6px', fontFamily: 'Lilita One, cursive', fontSize: 9,
+                    }}>{badge.text}</span>
+                  )}
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691' }}>{m.time}</span>
+                </div>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#A9B0C6', lineHeight: '20px' }}>
+                  {m.text}
+                </p>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Composer */}
+      <div className="flex items-center gap-2 px-4 py-3"
+        style={{ background: '#141A2E', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <input value={input} onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && send()}
+          placeholder="Escreva uma mensagem…"
+          style={{
+            flex: 1, height: 40, borderRadius: 999, background: '#1B2340',
+            border: '1px solid rgba(255,255,255,0.06)', paddingLeft: 16, paddingRight: 16,
+            color: '#FFFFFF', fontFamily: 'Inter, sans-serif', fontSize: 14, outline: 'none',
+          }} />
+        <button onClick={send} className="btn-yellow"
+          style={{ width: 40, height: 40, borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Send size={18} />
+        </button>
+      </div>
+
+      {/* Coin rain overlay */}
+      {rain && (
+        <div className="fixed inset-0 flex flex-col items-center justify-center"
+          style={{ background: 'rgba(7,10,20,0.85)', backdropFilter: 'blur(4px)', zIndex: 100 }}>
+          {Array.from({ length: 24 }).map((_, i) => (
+            <span key={i} className="coin-particle"
+              style={{
+                position: 'absolute', top: -20, left: `${(i * 37) % 100}%`,
+                fontSize: 22, animationDuration: `${1.5 + (i % 5) * 0.3}s`,
+                animationDelay: `${(i % 6) * 0.2}s`,
+              }}>🪙</span>
+          ))}
+          <h2 style={{ fontFamily: 'Lilita One, cursive', fontSize: 30, color: '#FFD93D', marginBottom: 8 }}>
+            Chuva de moedas!
+          </h2>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#A9B0C6', marginBottom: 4 }}>
+            {rainLeft}s restantes
+          </p>
+          {!claimed ? (
+            <button className="btn-green glow-pulse" style={{ height: 56, paddingLeft: 40, paddingRight: 40, fontSize: 20, marginTop: 12 }}
+              onClick={() => setClaimed(true)}>Pegar</button>
+          ) : (
+            <p style={{ fontFamily: 'Lilita One, cursive', fontSize: 22, color: '#3DDB5F', marginTop: 12 }}>
+              Você pegou +50 BC!
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+7. src/screens/NotificationsScreen.tsx
+tsx
+import { ChevronLeft } from 'lucide-react'
+
+interface Props { onBack: () => void }
+
+const GROUPS = [
+  {
+    day: 'Hoje',
+    items: [
+      { icon: '🎁', title: 'Recompensa diária pronta', desc: 'Pegue 100 BC grátis', time: '09:12', unread: true },
+      { icon: '↑', title: 'Saque enviado', desc: '2.000 BC para USDT-TRON', time: '08:47', unread: true },
+      { icon: '🏆', title: 'Você subiu no ranking', desc: 'Agora você é #10 no semanal', time: '08:00', unread: false },
+    ],
+  },
+  {
+    day: 'Ontem',
+    items: [
+      { icon: '👥', title: 'Carlos M. aceitou seu convite', desc: '+500 BC creditados', time: '21:14', unread: false },
+      { icon: '🎲', title: 'Resultado do torneio', desc: 'Você ficou em 4º lugar · +250 BC', time: '20:00', unread: false },
+    ],
+  },
+  {
+    day: 'Sistema',
+    items: [
+      { icon: '🛡️', title: 'Nova política de privacidade', desc: 'Atualizada em 15/03', time: '15/03', unread: false },
+    ],
+  },
+]
+
+export default function NotificationsScreen({ onBack }: Props) {
+  return (
+    <div className="flex flex-col" style={{ background: '#0D1222', minHeight: '100%' }}>
+      <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+        style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+        <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+          <ChevronLeft size={24} color="#FFFFFF" />
+        </button>
+        <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 18, color: '#FFFFFF' }}>Notificações</span>
+        <button style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#3B7BFF', background: 'none', border: 'none', cursor: 'pointer' }}>
+          Marcar lidas
+        </button>
+      </div>
+      <div className="flex flex-col gap-4 px-4 py-4 pb-6">
+        {GROUPS.map((g, gi) => (
+          <div key={gi}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 12, color: '#6E7691', marginBottom: 8 }}>
+              {g.day.toUpperCase()}
+            </p>
+            <div className="flex flex-col gap-2">
+              {g.items.map((it, i) => (
+                <div key={i} className="card-sm flex items-start gap-3"
+                  style={{ padding: 14, border: it.unread ? '1px solid rgba(255,217,61,0.25)' : undefined }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 12, background: '#141A2E',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0,
+                  }}>{it.icon}</div>
+                  <div className="flex-1">
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 14, color: '#FFFFFF' }}>
+                      {it.title}
+                    </p>
+                    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#A9B0C6', marginTop: 2 }}>{it.desc}</p>
+                  </div>
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691' }}>{it.time}</span>
+                  {it.unread && (
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#FFD93D', flexShrink: 0, marginTop: 6 }} />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+8. src/screens/SettingsScreen.tsx
+tsx
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState } from 'react'
+
+interface Props { onBack: () => void; onLegal: (s: string) => void }
+
+const TOGGLES = [
+  { id: 'sound', label: 'Sons do app', default: true },
+  { id: 'haptics', label: 'Vibração (haptics)', default: true },
+  { id: 'animations', label: 'Animações completas', default: true },
+  { id: 'saver', label: 'Modo economia de dados', default: false },
+  { id: 'hideName', label: 'Ocultar meu nome no chat', default: false },
+]
+
+const LEGAL: { id: string; label: string }[] = [
+  { id: 'terms', label: 'Termos de uso' },
+  { id: 'privacy', label: 'Política de privacidade' },
+  { id: 'bonusTerms', label: 'Termos de bônus' },
+  { id: 'gameRules', label: 'Regras dos jogos e RTP' },
+  { id: 'fairness', label: 'Jogo justo' },
+  { id: 'license', label: 'Licença e regulador' },
+  { id: 'aml', label: 'Política AML' },
+  { id: 'complaints', label: 'Reclamações' },
+  { id: 'about', label: 'Sobre a BoraBet' },
+]
+
+export default function SettingsScreen({ onBack, onLegal }: Props) {
+  const [state, setState] = useState<Record<string, boolean>>(
+    Object.fromEntries(TOGGLES.map(t => [t.id, t.default]))
+  )
+  const [lang, setLang] = useState('pt-BR')
+  const [currency, setCurrency] = useState<'BC' | 'BRL'>('BC')
+
+  return (
+    <div className="flex flex-col" style={{ background: '#0D1222', minHeight: '100%' }}>
+      <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+        style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+        <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+          <ChevronLeft size={24} color="#FFFFFF" />
+        </button>
+        <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 18, color: '#FFFFFF' }}>Configurações</span>
+        <div style={{ width: 44 }} />
+      </div>
+
+      <div className="flex flex-col gap-4 px-4 py-4 pb-6">
+        {/* Language */}
+        <div className="card" style={{ padding: 16 }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#FFFFFF', marginBottom: 10 }}>Idioma</p>
+          <div className="flex gap-2">
+            {['pt-BR', 'en', 'es'].map(l => (
+              <button key={l} onClick={() => setLang(l)}
+                style={{
+                  flex: 1, height: 36, borderRadius: 999,
+                  background: lang === l ? '#FFD93D' : '#1B2340',
+                  border: lang === l ? 'none' : '1px solid rgba(255,255,255,0.06)',
+                  color: lang === l ? '#1A1400' : '#A9B0C6',
+                  fontFamily: lang === l ? 'Lilita One, cursive' : 'Inter, sans-serif',
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}>{l === 'pt-BR' ? 'Português' : l === 'en' ? 'English' : 'Español'}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Currency */}
+        <div className="card" style={{ padding: 16 }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#FFFFFF', marginBottom: 10 }}>
+            Exibir valores em
+          </p>
+          <div className="flex gap-2">
+            {(['BC', 'BRL'] as const).map(c => (
+              <button key={c} onClick={() => setCurrency(c)}
+                style={{
+                  flex: 1, height: 36, borderRadius: 999,
+                  background: currency === c ? '#FFD93D' : '#1B2340',
+                  border: currency === c ? 'none' : '1px solid rgba(255,255,255,0.06)',
+                  color: currency === c ? '#1A1400' : '#A9B0C6',
+                  fontFamily: currency === c ? 'Lilita One, cursive' : 'Inter, sans-serif',
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}>{c === 'BC' ? 'Bora Coins' : 'R$'}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Toggles */}
+        <div className="card" style={{ padding: 16 }}>
+          {TOGGLES.map((t, i) => (
+            <div key={t.id} className="flex items-center justify-between py-3"
+              style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#FFFFFF' }}>{t.label}</span>
+              <button onClick={() => setState(s => ({ ...s, [t.id]: !s[t.id] }))}
+                style={{
+                  width: 48, height: 28, borderRadius: 999,
+                  background: state[t.id] ? '#3DDB5F' : '#1B2340',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  cursor: 'pointer', position: 'relative',
+                }}>
+                <span style={{
+                  position: 'absolute', top: 3, left: state[t.id] ? 23 : 3,
+                  width: 20, height: 20, borderRadius: '50%', background: '#fff',
+                  transition: 'left 150ms',
+                }} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Legal */}
+        <div className="card" style={{ padding: 16 }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#FFFFFF', marginBottom: 6 }}>
+            Legal e informações
+          </p>
+          {LEGAL.map((l, i) => (
+            <button key={l.id} onClick={() => onLegal(l.id)}
+              className="flex items-center justify-between w-full text-left py-3"
+              style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                background: 'none', border: 'none', cursor: 'pointer' }}>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#A9B0C6' }}>{l.label}</span>
+              <ChevronRight size={16} color="#6E7691" />
+            </button>
+          ))}
+        </div>
+
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691', textAlign: 'center' }}>
+          BoraBet · versão 1.0.0 · 18+
+        </p>
+      </div>
+    </div>
+  )
+}
+9. src/screens/ResponsiblePlayScreen.tsx
+tsx
+import { ChevronLeft } from 'lucide-react'
+import { useState } from 'react'
+
+interface Props { onBack: () => void }
+
+const LIMITS = [
+  { id: 'depDay', label: 'Limite de depósito diário', value: '2.000 BC' },
+  { id: 'depWeek', label: 'Limite de depósito semanal', value: '10.000 BC' },
+  { id: 'depMonth', label: 'Limite de depósito mensal', value: '40.000 BC' },
+  { id: 'lossDay', label: 'Limite de perda diária', value: 'Não definido' },
+]
+
+const PAUSES = [
+  { id: 'p24', label: 'Pausa de 24 horas' },
+  { id: 'p7', label: 'Pausa de 7 dias' },
+  { id: 'p30', label: 'Pausa de 30 dias' },
+]
+
+const EXCLUSIONS = [
+  { id: 'x6', label: '6 meses' },
+  { id: 'x1', label: '1 ano' },
+  { id: 'xp', label: 'Permanente' },
+]
+
+export default function ResponsiblePlayScreen({ onBack }: Props) {
+  const [confirm, setConfirm] = useState<{ type: 'pause' | 'exclude'; label: string } | null>(null)
+  const [reality, setReality] = useState(60)
+
+  return (
+    <div className="flex flex-col" style={{ background: '#0D1222', minHeight: '100%' }}>
+      <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+        style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+        <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+          <ChevronLeft size={24} color="#FFFFFF" />
+        </button>
+        <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 18, color: '#FFFFFF' }}>Jogo responsável</span>
+        <div style={{ width: 44 }} />
+      </div>
+
+      <div className="flex flex-col gap-4 px-4 py-4 pb-6">
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#A9B0C6' }}>
+          Você está no controle. Jogue com moderação. Se o jogo deixar de ser diversão, use as ferramentas abaixo.
+        </p>
+
+        {/* Limits */}
+        <div className="card" style={{ padding: 16 }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 14, color: '#FFFFFF', marginBottom: 8 }}>
+            Limites
+          </p>
+          {LIMITS.map((l, i) => (
+            <button key={l.id} className="flex items-center justify-between w-full text-left py-3"
+              style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                background: 'none', border: 'none', cursor: 'pointer' }}>
+              <div>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#FFFFFF' }}>{l.label}</p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#6E7691', marginTop: 2 }}>{l.value}</p>
+              </div>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#3B7BFF' }}>Editar</span>
+            </button>
+          ))}
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691', marginTop: 8 }}>
+            Reduções aplicam imediatamente. Aumentos entram em vigor após 24h.
+          </p>
+        </div>
+
+        {/* Reality check */}
+        <div className="card" style={{ padding: 16 }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 14, color: '#FFFFFF', marginBottom: 8 }}>
+            Alerta de tempo real
+          </p>
+          <div className="flex gap-2">
+            {[30, 60, 120].map(v => (
+              <button key={v} onClick={() => setReality(v)}
+                style={{
+                  flex: 1, height: 36, borderRadius: 999,
+                  background: reality === v ? '#FFD93D' : '#1B2340',
+                  border: reality === v ? 'none' : '1px solid rgba(255,255,255,0.06)',
+                  color: reality === v ? '#1A1400' : '#A9B0C6',
+                  fontFamily: reality === v ? 'Lilita One, cursive' : 'Inter, sans-serif',
+                  fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                }}>{v} min</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Pause */}
+        <div className="card" style={{ padding: 16 }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 14, color: '#FFFFFF', marginBottom: 8 }}>
+            Fazer uma pausa
+          </p>
+          {PAUSES.map(p => (
+            <button key={p.id} onClick={() => setConfirm({ type: 'pause', label: p.label })}
+              className="flex items-center justify-between w-full text-left py-3"
+              style={{ background: 'none', border: 'none', cursor: 'pointer',
+                borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#FFFFFF' }}>{p.label}</span>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#FFD93D' }}>Iniciar</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Self exclusion */}
+        <div className="card" style={{ padding: 16, border: '1px solid rgba(240,66,75,0.3)' }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 14, color: '#F0424B', marginBottom: 4 }}>
+            Autoexclusão
+          </p>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#6E7691', marginBottom: 10 }}>
+            Bloqueia sua conta de todas as atividades com dinheiro real. Não pode ser revertida antes do prazo.
+          </p>
+          {EXCLUSIONS.map(p => (
+            <button key={p.id} onClick={() => setConfirm({ type: 'exclude', label: p.label })}
+              className="flex items-center justify-between w-full text-left py-3"
+              style={{ background: 'none', border: 'none', cursor: 'pointer',
+                borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#FFFFFF' }}>{p.label}</span>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#F0424B' }}>Bloquear</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Help */}
+        <div className="card-sm" style={{ padding: 14 }}>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#FFFFFF', marginBottom: 6 }}>
+            Precisa de ajuda?
+          </p>
+          <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#A9B0C6' }}>
+            Jogadores Anônimos Brasil · 0800-xxx-xxxx · CVV 188
+          </p>
+        </div>
+      </div>
+
+      {/* Confirmation sheet */}
+      {confirm && (
+        <div className="fixed inset-0 sheet-backdrop flex items-end z-50">
+          <div style={{ background: '#141A2E', borderRadius: '28px 28px 0 0', width: '100%',
+            padding: '24px 24px 48px', border: '1px solid rgba(255,255,255,0.06)', borderBottom: 'none' }}>
+            <div style={{ width: 40, height: 4, background: '#6E7691', borderRadius: 999, margin: '0 auto 20px' }} />
+            <h3 style={{ fontFamily: 'Lilita One, cursive', fontSize: 20, color: '#FFFFFF', textAlign: 'center', marginBottom: 8 }}>
+              {confirm.type === 'pause' ? 'Confirmar pausa?' : 'Confirmar autoexclusão?'}
+            </h3>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#A9B0C6', textAlign: 'center', marginBottom: 24 }}>
+              {confirm.label}
+            </p>
+            <div className="flex gap-3">
+              <button className="flex-1"
+                style={{ height: 48, borderRadius: 999, background: '#F0424B', border: 'none',
+                  color: '#FFFFFF', fontFamily: 'Lilita One, cursive', fontSize: 16, cursor: 'pointer' }}
+                onClick={() => setConfirm(null)}>Confirmar</button>
+              <button className="btn-secondary flex-1" style={{ height: 48 }}
+                onClick={() => setConfirm(null)}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+10. src/screens/KycScreen.tsx
+tsx
+import { ChevronLeft } from 'lucide-react'
+import { useState } from 'react'
+
+interface Props { onBack: () => void; onDone: () => void }
+
+type Step = 'name' | 'cpf' | 'selfie' | 'done'
+
+export default function KycScreen({ onBack, onDone }: Props) {
+  const [step, setStep] = useState<Step>('name')
+  const [name, setName] = useState('')
+  const [dob, setDob] = useState('')
+  const [cpf, setCpf] = useState('')
+
+  const steps: Step[] = ['name', 'cpf', 'selfie', 'done']
+  const idx = steps.indexOf(step)
+
+  const progress = ((idx + 1) / steps.length) * 100
+
+  return (
+    <div className="flex flex-col" style={{ background: '#0D1222', minHeight: '100%' }}>
+      <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+        style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+        <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+          <ChevronLeft size={24} color="#FFFFFF" />
+        </button>
+        <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 18, color: '#FFFFFF' }}>Verificação</span>
+        <div style={{ width: 44 }} />
+      </div>
+
+      {/* Progress */}
+      <div style={{ padding: '12px 16px', background: '#141A2E' }}>
+        <div className="progress-bar">
+          <div className="progress-fill" style={{ width: `${progress}%` }} />
+        </div>
+        <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#A9B0C6', marginTop: 6, textAlign: 'center' }}>
+          Passo {idx + 1} de {steps.length}
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-4 px-4 py-4 pb-6">
+        {step === 'name' && (
+          <>
+            <h2 style={{ fontFamily: 'Lilita One, cursive', fontSize: 22, color: '#FFFFFF' }}>
+              Seus dados pessoais
+            </h2>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#A9B0C6' }}>
+              Precisamos confirmar sua identidade antes de você jogar com dinheiro real.
+            </p>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Nome completo"
+              style={inputStyle} />
+            <input value={dob} onChange={e => setDob(e.target.value)} placeholder="Data de nascimento (DD/MM/AAAA)"
+              style={inputStyle} />
+            <button className="btn-yellow" disabled={!name || !dob}
+              style={{ height: 52, fontSize: 17 }} onClick={() => setStep('cpf')}>
+              Continuar
+            </button>
+          </>
+        )}
+
+        {step === 'cpf' && (
+          <>
+            <h2 style={{ fontFamily: 'Lilita One, cursive', fontSize: 22, color: '#FFFFFF' }}>
+              CPF
+            </h2>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#A9B0C6' }}>
+              Usado apenas para validação. Seus dados são criptografados.
+            </p>
+            <input value={cpf} onChange={e => setCpf(e.target.value)} placeholder="000.000.000-00"
+              style={inputStyle} inputMode="numeric" />
+            <button className="btn-yellow" disabled={cpf.length < 11}
+              style={{ height: 52, fontSize: 17 }} onClick={() => setStep('selfie')}>
+              Continuar
+            </button>
+          </>
+        )}
+
+        {step === 'selfie' && (
+          <>
+            <h2 style={{ fontFamily: 'Lilita One, cursive', fontSize: 22, color: '#FFFFFF' }}>
+              Selfie com prova de vida
+            </h2>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#A9B0C6' }}>
+              Fique em um local bem iluminado e siga as instruções na tela.
+            </p>
+            <div className="card flex flex-col items-center justify-center gap-3"
+              style={{ padding: 32, border: '2px dashed rgba(255,217,61,0.4)' }}>
+              <span style={{ fontSize: 64 }}>🤳</span>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#A9B0C6' }}>
+                Toque para abrir a câmera
+              </p>
+            </div>
+            <button className="btn-yellow" style={{ height: 52, fontSize: 17 }}
+              onClick={() => { setStep('done'); setTimeout(onDone, 1500) }}>
+              Enviar verificação
+            </button>
+          </>
+        )}
+
+        {step === 'done' && (
+          <div className="flex flex-col items-center justify-center gap-4" style={{ paddingTop: 60 }}>
+            <span style={{ fontSize: 80 }}>✅</span>
+            <h2 style={{ fontFamily: 'Lilita One, cursive', fontSize: 26, color: '#3DDB5F', textAlign: 'center' }}>
+              Verificação enviada!
+            </h2>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#A9B0C6', textAlign: 'center' }}>
+              Normalmente leva até 5 minutos. Você receberá uma notificação quando estiver pronta.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+const inputStyle: React.CSSProperties = {
+  height: 52, borderRadius: 16, background: '#1B2340',
+  border: '1px solid rgba(255,255,255,0.06)', paddingLeft: 16, paddingRight: 16,
+  color: '#FFFFFF', fontFamily: 'Inter, sans-serif', fontSize: 15, outline: 'none',
+}
+11. src/screens/SupportScreen.tsx
+tsx
+import { ChevronLeft, Search, ChevronRight } from 'lucide-react'
+
+interface Props { onBack: () => void }
+
+const CATEGORIES = [
+  { icon: '💵', label: 'Depósitos', count: 12 },
+  { icon: '↑', label: 'Saques', count: 8 },
+  { icon: '🎲', label: 'Jogos', count: 6 },
+  { icon: '🎁', label: 'Bônus', count: 9 },
+  { icon: '👤', label: 'Conta', count: 5 },
+  { icon: '🔒', label: 'Verificação', count: 7 },
+]
+
+const TICKETS = [
+  { id: '#4821', title: 'Depósito não creditado', status: 'Em análise', date: 'Hoje, 08:14' },
+  { id: '#4718', title: 'Dúvida sobre bônus', status: 'Resolvido', date: 'Ontem, 21:40' },
+]
+
+export default function SupportScreen({ onBack }: Props) {
+  return (
+    <div className="flex flex-col" style={{ background: '#0D1222', minHeight: '100%' }}>
+      <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+        style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+        <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+          <ChevronLeft size={24} color="#FFFFFF" />
+        </button>
+        <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 18, color: '#FFFFFF' }}>Suporte</span>
+        <div style={{ width: 44 }} />
+      </div>
+
+      <div className="flex flex-col gap-4 px-4 py-4 pb-6">
+        {/* Search */}
+        <div style={{
+          height: 44, borderRadius: 999, background: '#1B2340',
+          border: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 14, paddingRight: 14,
+        }}>
+          <Search size={16} color="#6E7691" />
+          <input placeholder="Buscar ajuda…"
+            style={{ flex: 1, background: 'none', border: 'none', outline: 'none',
+              color: '#FFFFFF', fontFamily: 'Inter, sans-serif', fontSize: 14 }} />
+        </div>
+
+        {/* Categories */}
+        <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 12, color: '#6E7691' }}>
+          CATEGORIAS
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {CATEGORIES.map(c => (
+            <button key={c.label} className="card-sm flex items-center gap-3"
+              style={{ padding: 14, cursor: 'pointer', textAlign: 'left' }}>
+              <span style={{ fontSize: 22 }}>{c.icon}</span>
+              <div className="flex-1">
+                <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#FFFFFF' }}>
+                  {c.label}
+                </p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691', marginTop: 2 }}>
+                  {c.count} artigos
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Contact */}
+        <button className="btn-yellow" style={{ height: 52, fontSize: 16 }}>
+          Abrir novo ticket
+        </button>
+
+        {/* Ticket list */}
+        <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 12, color: '#6E7691', marginTop: 4 }}>
+          MEUS TICKETS
+        </p>
+        {TICKETS.map(t => (
+          <button key={t.id} className="card-sm flex items-center gap-3"
+            style={{ padding: 14, cursor: 'pointer', textAlign: 'left' }}>
+            <div className="flex-1">
+              <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 14, color: '#FFFFFF' }}>
+                {t.title}
+              </p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#6E7691', marginTop: 2 }}>
+                {t.id} · {t.date}
+              </p>
+            </div>
+            <span style={{
+              fontFamily: 'Inter, sans-serif', fontSize: 11, fontWeight: 600,
+              background: t.status === 'Resolvido' ? 'rgba(61,219,95,0.15)' : 'rgba(255,217,61,0.15)',
+              color: t.status === 'Resolvido' ? '#3DDB5F' : '#FFD93D',
+              padding: '3px 8px', borderRadius: 8,
+            }}>{t.status}</span>
+            <ChevronRight size={16} color="#6E7691" />
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+12. src/screens/TournamentsScreen.tsx
+tsx
+import { ChevronLeft } from 'lucide-react'
+import { useState } from 'react'
+
+interface Props { onBack: () => void }
+
+type Tab = 'active' | 'upcoming' | 'finished'
+
+const TOURNAMENTS = {
+  active: [
+    {
+      id: 1, title: 'Campeonato Domino Semanal', icon: '🎲',
+      prize: '50.000 BC', players: 342, ends: '2d 14h', progress: 62,
+      leaders: [
+        { rank: 1, name: 'Carlos M.', pts: 1420 },
+        { rank: 2, name: 'Fernanda L.', pts: 1280 },
+        { rank: 3, name: 'Diego R.', pts: 1170 },
+      ],
+    },
+    {
+      id: 2, title: 'Plinko Multiplicador', icon: '🎯',
+      prize: '25.000 BC', players: 189, ends: '5d 08h', progress: 30,
+      leaders: [
+        { rank: 1, name: 'Bruno T.', pts: '420×' },
+        { rank: 2, name: 'Ana P.', pts: '380×' },
+        { rank: 3, name: 'Lucas C.', pts: '290×' },
+      ],
+    },
+  ],
+  upcoming: [
+    { id: 3, title: 'Torneio Relâmpago', icon: '⚡', prize: '10.000 BC', starts: 'Amanhã, 20:00' },
+  ],
+  finished: [
+    { id: 4, title: 'Campeonato Domino #11', icon: '🎲', prize: '40.000 BC', winner: 'Carlos M.' },
+  ],
+}
+
+export default function TournamentsScreen({ onBack }: Props) {
+  const [tab, setTab] = useState<Tab>('active')
+  const list = TOURNAMENTS[tab] as any[]
+
+  return (
+    <div className="flex flex-col" style={{ background: '#0D1222', minHeight: '100%' }}>
+      <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+        style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+        <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+          <ChevronLeft size={24} color="#FFFFFF" />
+        </button>
+        <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 18, color: '#FFFFFF' }}>Torneios</span>
+        <div style={{ width: 44 }} />
+      </div>
+
+      <div className="flex gap-1 px-4 py-3"
+        style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        {(['active', 'upcoming', 'finished'] as Tab[]).map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            style={{
+              flex: 1, height: 36, borderRadius: 999,
+              background: tab === t ? '#FFD93D' : 'transparent',
+              border: tab === t ? 'none' : '1px solid rgba(255,255,255,0.06)',
+              color: tab === t ? '#1A1400' : '#A9B0C6',
+              fontFamily: tab === t ? 'Lilita One, cursive' : 'Inter, sans-serif',
+              fontSize: 13, fontWeight: 600, cursor: 'pointer',
+            }}>
+            {t === 'active' ? 'Ao vivo' : t === 'upcoming' ? 'Em breve' : 'Encerrados'}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-3 px-4 py-4 pb-6">
+        {list.map((t: any) => (
+          <div key={t.id} className="card" style={{ padding: 16 }}>
+            <div className="flex items-start gap-3 mb-3">
+              <span style={{ fontSize: 32, flexShrink: 0 }}>{t.icon}</span>
+              <div className="flex-1">
+                <p style={{ fontFamily: 'Lilita One, cursive', fontSize: 16, color: '#FFFFFF' }}>
+                  {t.title}
+                </p>
+                <div className="flex gap-3 mt-1">
+                  <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#FFD93D', fontWeight: 600 }}>
+                    🏆 {t.prize}
+                  </span>
+                  {t.players && (
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#6E7691' }}>
+                      👥 {t.players}
+                    </span>
+                  )}
+                  {t.ends && (
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#3DDB5F' }}>
+                      ⏱ {t.ends}
+                    </span>
+                  )}
+                  {t.starts && (
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#3B7BFF' }}>
+                      🕒 {t.starts}
+                    </span>
+                  )}
+                  {t.winner && (
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#FFD93D' }}>
+                      🥇 {t.winner}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {t.progress !== undefined && (
+              <div className="mb-3">
+                <div className="progress-bar" style={{ height: 6 }}>
+                  <div className="progress-fill" style={{ width: `${t.progress}%` }} />
+                </div>
+              </div>
+            )}
+
+            {t.leaders && (
+              <div style={{ background: '#1B2340', borderRadius: 12, padding: 10 }}>
+                {t.leaders.map((l: any, i: number) => (
+                  <div key={i} className="flex items-center gap-2 py-1">
+                    <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 14,
+                      color: ['#D4A017', '#A9B0C6', '#C97B3A'][i], width: 20 }}>
+                      {l.rank}
+                    </span>
+                    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#FFFFFF', flex: 1 }}>
+                      {l.name}
+                    </span>
+                    <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 13, color: '#FFD93D' }}>
+                      {l.pts}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {t.leaders && (
+              <button className="btn-yellow" style={{ width: '100%', height: 40, marginTop: 12, fontSize: 14 }}>
+                Ver ranking
+              </button>
+            )}
+          </div>
+        ))}
+
+        {list.length === 0 && (
+          <div className="flex flex-col items-center gap-3 py-12">
+            <span style={{ fontSize: 48, opacity: 0.4 }}>🏆</span>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#6E7691' }}>
+              Nenhum torneio por aqui ainda
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+13. src/screens/PromotionsScreen.tsx
+tsx
+import { ChevronLeft } from 'lucide-react'
+
+interface Props { onBack: () => void }
+
+const ACTIVE = [
+  {
+    id: 1, icon: '🎁', title: 'Bônus de boas-vindas',
+    desc: '+10% extra no primeiro depósito',
+    progress: 62, progressText: '1.240 / 2.000 BC apostados',
+    remaining: '6 dias restantes',
+  },
+  {
+    id: 2, icon: '💰', title: 'Cashback semanal',
+    desc: '2% das perdas devolvidos toda segunda',
+    progress: 0, progressText: 'Próximo crédito: segunda, 12:00',
+    remaining: '',
+  },
+]
+
+const AVAILABLE = [
+  {
+    id: 3, icon: '🔥', title: 'Recarga de sexta',
+    desc: '+15% no depósito desta sexta-feira',
+    terms: 'Depósitos até 5.000 BC · Apostar 3×',
+  },
+  {
+    id: 4, icon: '👥', title: 'Convide e ganhe',
+    desc: 'Ganhe 500 BC por amigo que depositar',
+    terms: 'Amigo precisa verificar conta e depositar 500 BC',
+  },
+]
+
+export default function PromotionsScreen({ onBack }: Props) {
+  return (
+    <div className="flex flex-col" style={{ background: '#0D1222', minHeight: '100%' }}>
+      <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+        style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+        <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+          <ChevronLeft size={24} color="#FFFFFF" />
+        </button>
+        <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 18, color: '#FFFFFF' }}>Bônus</span>
+        <div style={{ width: 44 }} />
+      </div>
+
+      <div className="flex flex-col gap-4 px-4 py-4 pb-6">
+        <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 12, color: '#6E7691' }}>
+          ATIVOS
+        </p>
+        {ACTIVE.map(p => (
+          <div key={p.id} className="card" style={{ padding: 16 }}>
+            <div className="flex items-start gap-3 mb-3">
+              <span style={{ fontSize: 32, flexShrink: 0 }}>{p.icon}</span>
+              <div className="flex-1">
+                <p style={{ fontFamily: 'Lilita One, cursive', fontSize: 16, color: '#FFFFFF' }}>
+                  {p.title}
+                </p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#A9B0C6', marginTop: 2 }}>
+                  {p.desc}
+                </p>
+              </div>
+            </div>
+            {p.progress > 0 && (
+              <>
+                <div className="progress-bar" style={{ marginBottom: 6 }}>
+                  <div className="progress-fill" style={{ width: `${p.progress}%` }} />
+                </div>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691' }}>
+                  {p.progressText} · {p.remaining}
+                </p>
+              </>
+            )}
+            {p.progress === 0 && (
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691' }}>
+                {p.progressText}
+              </p>
+            )}
+          </div>
+        ))}
+
+        <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 12, color: '#6E7691', marginTop: 4 }}>
+          DISPONÍVEIS
+        </p>
+        {AVAILABLE.map(p => (
+          <div key={p.id} className="card" style={{ padding: 16 }}>
+            <div className="flex items-start gap-3 mb-3">
+              <span style={{ fontSize: 32, flexShrink: 0 }}>{p.icon}</span>
+              <div className="flex-1">
+                <p style={{ fontFamily: 'Lilita One, cursive', fontSize: 16, color: '#FFFFFF' }}>
+                  {p.title}
+                </p>
+                <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#A9B0C6', marginTop: 2 }}>
+                  {p.desc}
+                </p>
+              </div>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: 10, marginBottom: 12 }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691' }}>
+                {p.terms}
+              </p>
+            </div>
+            <button className="btn-yellow" style={{ width: '100%', height: 40, fontSize: 14 }}>
+              Ativar bônus
+            </button>
+          </div>
+        ))}
+
+        <button style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#3B7BFF',
+          background: 'none', border: 'none', cursor: 'pointer', textAlign: 'center', paddingTop: 4 }}>
+          Ver termos completos →
+        </button>
+      </div>
+    </div>
+  )
+}
+14. src/screens/FriendsScreen.tsx
+tsx
+import { ChevronLeft, Copy, Share2 } from 'lucide-react'
+import { useState } from 'react'
+
+interface Props { onBack: () => void }
+
+const FRIENDS = [
+  { id: 1, name: 'Carlos M.', avatar: '🦁', online: true, wagered: '2.400 BC' },
+  { id: 2, name: 'Fernanda L.', avatar: '🌟', online: true, wagered: '1.800 BC' },
+  { id: 3, name: 'Diego R.', avatar: '🔥', online: false, wagered: '900 BC' },
+  { id: 4, name: 'Ana P.', avatar: '🎯', online: false, wagered: '500 BC' },
+]
+
+const MOCK_LINK = 't.me/borabet_bot/app?startapp=ref_a3f9c2'
+
+export default function FriendsScreen({ onBack }: Props) {
+  const [copied, setCopied] = useState(false)
+
+  const copy = () => {
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div className="flex flex-col" style={{ background: '#0D1222', minHeight: '100%' }}>
+      <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+        style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+        <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+          <ChevronLeft size={24} color="#FFFFFF" />
+        </button>
+        <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 18, color: '#FFFFFF' }}>Amigos</span>
+        <div style={{ width: 44 }} />
+      </div>
+
+      <div className="flex flex-col gap-4 px-4 py-4 pb-6">
+        {/* Hero card */}
+        <div className="card" style={{ padding: 20, background: 'linear-gradient(135deg, #1B2340 0%, #0D1222 100%)' }}>
+          <div className="flex items-center gap-3 mb-3">
+            <span style={{ fontSize: 40 }}>👥</span>
+            <div>
+              <p style={{ fontFamily: 'Lilita One, cursive', fontSize: 20, color: '#FFFFFF' }}>
+                Convide e ganhe
+              </p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#A9B0C6', marginTop: 2 }}>
+                500 BC por amigo que depositar
+              </p>
+            </div>
+          </div>
+
+          <div style={{ background: '#0D1222', borderRadius: 12, padding: 12, marginBottom: 12 }}>
+            <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691', marginBottom: 4 }}>
+              Seu link
+            </p>
+            <div className="flex items-center gap-2">
+              <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#A9B0C6', flex: 1, wordBreak: 'break-all' }}>
+                {MOCK_LINK}
+              </span>
+              <button onClick={copy} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                {copied ? <span style={{ fontSize: 12, color: '#3DDB5F' }}>✓</span> : <Copy size={14} color="#A9B0C6" />}
+              </button>
+            </div>
+          </div>
+
+          <button className="btn-yellow flex items-center justify-center gap-2"
+            style={{ width: '100%', height: 44, fontSize: 15 }}>
+            <Share2 size={16} />
+            Compartilhar convite
+          </button>
+        </div>
+
+        {/* Stats */}
+        <div className="flex gap-3">
+          {[
+            { label: 'Convidados', value: '12' },
+            { label: 'Ativos', value: '8' },
+            { label: 'Bônus ganhos', value: '4.000' },
+          ].map((s, i) => (
+            <div key={i} className="card-sm flex-1 flex flex-col items-center" style={{ padding: 14 }}>
+              <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 20, color: '#FFFFFF' }}>{s.value}</span>
+              <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691', marginTop: 2, textAlign: 'center' }}>
+                {s.label}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Friends list */}
+        <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 12, color: '#6E7691', marginTop: 4 }}>
+          SEUS AMIGOS
+        </p>
+        {FRIENDS.map(f => (
+          <div key={f.id} className="card-sm flex items-center gap-3" style={{ padding: 12 }}>
+            <div style={{ position: 'relative' }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: '50%', background: '#1B2340',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
+              }}>{f.avatar}</div>
+              {f.online && (
+                <div style={{
+                  position: 'absolute', bottom: 2, right: 2, width: 12, height: 12,
+                  borderRadius: '50%', background: '#3DDB5F', border: '2px solid #141A2E',
+                }} />
+              )}
+            </div>
+            <div className="flex-1">
+              <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 14, color: '#FFFFFF' }}>
+                {f.name}
+              </p>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691', marginTop: 2 }}>
+                Apostou {f.wagered}
+              </p>
+            </div>
+            <button className="btn-yellow" disabled={!f.online}
+              style={{ height: 32, paddingLeft: 14, paddingRight: 14, fontSize: 12 }}>
+              Desafiar
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+15. src/screens/legal/* — 9 legal screens
+src/screens/legal/TermsScreen.tsx
+
+tsx
+import LegalLayout from './LegalLayout'
+
+export default function TermsScreen({ onBack }: { onBack: () => void }) {
+  return (
+    <LegalLayout title="Termos de uso" updated="15/03/2025" onBack={onBack}>
+      <p>Ao usar a BoraBet você concorda com estes termos. A BoraBet é uma plataforma de entretenimento com jogos originais.</p>
+      <h3>1. Elegibilidade</h3>
+      <p>É necessário ter 18 anos ou mais e residir em uma região onde o uso seja permitido. Contas duplicadas são proibidas.</p>
+      <h3>2. Conta e verificação</h3>
+      <p>Você é responsável pela veracidade das informações fornecidas. Podemos solicitar documentos para verificação.</p>
+      <h3>3. Bora Coins</h3>
+      <p>Bora Coins (BC) são créditos internos com paridade fixa publicada. Não constituem moeda eletrônica.</p>
+      <h3>4. Jogos</h3>
+      <p>Os resultados são determinados por um gerador de números aleatórios certificado. As regras de cada jogo estão descritas na seção Jogos.</p>
+      <h3>5. Saques</h3>
+      <p>Saques estão sujeitos à verificação de identidade e podem ser recusados em caso de suspeita de fraude.</p>
+      <h3>6. Conduta</h3>
+      <p>É proibido usar bots, explorar falhas, ou qualquer forma de conluio. Contas envolvidas podem ser suspensas.</p>
+      <h3>7. Jogo responsável</h3>
+      <p>Ferramentas de limite, pausa e autoexclusão estão disponíveis em Jogo responsável.</p>
+    </LegalLayout>
+  )
+}
+src/screens/legal/LegalLayout.tsx — shared shell
+
+tsx
+import { ChevronLeft } from 'lucide-react'
+import type { ReactNode } from 'react'
+
+interface Props {
+  title: string
+  updated?: string
+  onBack: () => void
+  children: ReactNode
+}
+
+export default function LegalLayout({ title, updated, onBack, children }: Props) {
+  return (
+    <div className="flex flex-col" style={{ background: '#0D1222', minHeight: '100%' }}>
+      <div className="flex items-center justify-between px-4 sticky top-0 z-40"
+        style={{ background: '#141A2E', borderBottom: '1px solid rgba(255,255,255,0.06)', height: 56 }}>
+        <button onClick={onBack} style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }} aria-label="Voltar">
+          <ChevronLeft size={24} color="#FFFFFF" />
+        </button>
+        <span style={{ fontFamily: 'Lilita One, cursive', fontSize: 16, color: '#FFFFFF', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {title}
+        </span>
+        <div style={{ width: 44 }} />
+      </div>
+      <div className="px-5 py-4 pb-10" style={{ color: '#A9B0C6', fontFamily: 'Inter, sans-serif', fontSize: 14, lineHeight: '22px' }}>
+        {updated && (
+          <p style={{ fontSize: 12, color: '#6E7691', marginBottom: 16 }}>Última atualização: {updated}</p>
+        )}
+        <style>{`
+          .legal-body h3 {
+            color: #FFFFFF;
+            font-family: 'Lilita One', cursive;
+            font-size: 16px;
+            margin-top: 20px;
+            margin-bottom: 6px;
+          }
+          .legal-body p { margin-bottom: 12px; }
+          .legal-body ul { padding-left: 20px; margin-bottom: 12px; }
+          .legal-body li { margin-bottom: 6px; }
+          .legal-body a { color: #3B7BFF; text-decoration: none; }
+        `}</style>
+        <div className="legal-body">{children}</div>
+      </div>
+    </div>
+  )
+}
+src/screens/legal/PrivacyScreen.tsx
+
+tsx
+import LegalLayout from './LegalLayout'
+
+export default function PrivacyScreen({ onBack }: { onBack: () => void }) {
+  return (
+    <LegalLayout title="Política de privacidade" updated="15/03/2025" onBack={onBack}>
+      <p>Esta política descreve como tratamos seus dados pessoais, em conformidade com a LGPD (Lei 13.709/2018).</p>
+      <h3>Dados que coletamos</h3>
+      <ul>
+        <li>Identificação: nome, CPF, data de nascimento</li>
+        <li>Contato: Telegram ID, nome de usuário</li>
+        <li>Transações: depósitos, saques, apostas</li>
+        <li>Técnicos: IP, dispositivo, logs de acesso</li>
+      </ul>
+      <h3>Finalidade</h3>
+      <p>Usamos os dados para operar sua conta, cumprir obrigações legais, prevenir fraudes e melhorar o serviço.</p>
+      <h3>Compartilhamento</h3>
+      <p>Compartilhamos apenas com prestadores de KYC, provedores de pagamento e autoridades quando legalmente exigido.</p>
+      <h3>Seus direitos</h3>
+      <p>Você pode solicitar acesso, correção, portabilidade ou exclusão dos seus dados pelo suporte.</p>
+      <h3>Segurança</h3>
+      <p>Dados sensíveis são criptografados em repouso e em trânsito. Acesso restrito por função.</p>
+    </LegalLayout>
+  )
+}
+src/screens/legal/BonusTermsScreen.tsx
+
+tsx
+import LegalLayout from './LegalLayout'
+
+export default function BonusTermsScreen({ onBack }: { onBack: () => void }) {
+  return (
+    <LegalLayout title="Termos de bônus" updated="15/03/2025" onBack={onBack}>
+      <p>Todos os bônus creditados na BoraBet estão sujeitos a estas regras.</p>
+      <h3>Bônus de boas-vindas</h3>
+      <p>+10% no primeiro depósito, limitado a 500 BC. Requer aposta de 3× o valor do bônus antes do saque.</p>
+      <h3>Roda diária</h3>
+      <p>1 giro grátis a cada 24h. Prêmios vão para o saldo de bônus com aposta de 2×.</p>
+      <h3>Cashback semanal</h3>
+      <p>2% das perdas líquidas da semana anterior, creditado toda segunda às 12:00 (horário de Brasília). Aposta de 1×.</p>
+      <h3>Restrições</h3>
+      <ul>
+        <li>Aposta máxima com bônus ativo: 100 BC</li>
+        <li>Bônus não são transferíveis entre contas</li>
+        <li>Contas duplicadas perdem todos os bônus</li>
+        <li>Bônus expiram em 30 dias</li>
+      </ul>
+      <h3>Contribuição para apostas</h3>
+      <p>Domino: 100% · Plinko: 100%</p>
+    </LegalLayout>
+  )
+}
+src/screens/legal/GameRulesScreen.tsx
+
+tsx
+import LegalLayout from './LegalLayout'
+
+export default function GameRulesScreen({ onBack }: { onBack: () => void }) {
+  return (
+    <LegalLayout title="Regras dos jogos e RTP" onBack={onBack}>
+      <h3>Dominó 1v1</h3>
+      <p>Dominó double-six, 28 peças. Cada jogador recebe 7 peças; 14 ficam no monte. A rodada termina quando um jogador esvazia a mão ou o jogo trava. Em caso de travamento, vence quem tiver menos pontos; empate devolve o pote.</p>
+      <ul>
+        <li>Comissão da plataforma: 10% do pote</li>
+        <li>Tempo por jogada: 20s (+ 2 extensões de 10s)</li>
+        <li>3 timeouts consecutivos = desistência automática</li>
+        <li>Desconexão: 30s para reconectar, depois desistência</li>
+        <li>RTP alvo: 97%</li>
+      </ul>
+
+      <h3>Plinko</h3>
+      <p>Uma bola é solta do topo de uma pirâmide de pinos e cai em uma caixa multiplicadora. Cada combinação de linhas × risco tem sua própria tabela de multiplicadores.</p>
+      <ul>
+        <li>Linhas: 8 a 16 (padrão 12)</li>
+        <li>Riscos: Baixo, Médio, Alto</li>
+        <li>Multiplicador máximo: 1000×</li>
+        <li>RTP alvo: 99% (Baixo), 98% (Médio), 97% (Alto)</li>
+        <li>Máximo de 5 bolas simultâneas</li>
+      </ul>
+
+      <h3>Fairness</h3>
+      <p>Todos os resultados são gerados no servidor por um RNG certificado. O cliente apenas anima o resultado.</p>
+    </LegalLayout>
+  )
+}
+src/screens/legal/FairnessScreen.tsx
+
+tsx
+import LegalLayout from './LegalLayout'
+
+export default function FairnessScreen({ onBack }: { onBack: () => void }) {
+  return (
+    <LegalLayout title="Jogo justo" onBack={onBack}>
+      <p>Todos os resultados da BoraBet são gerados por um gerador de números aleatórios (RNG) criptograficamente seguro, auditado por laboratório acreditado.</p>
+      <h3>Como funciona</h3>
+      <ul>
+        <li>O servidor gera a semente e o resultado</li>
+        <li>O cliente apenas anima o resultado visualmente</li>
+        <li>Nenhuma decisão de resultado ocorre no dispositivo do jogador</li>
+        <li>Logs de resultados ficam disponíveis para auditoria</li>
+      </ul>
+      <h3>Verificação</h3>
+      <p>Cada partida tem um identificador único. Você pode solicitar a verificação de qualquer resultado pelo suporte.</p>
+      <h3>Certificação</h3>
+      <p>Dominó e Plinko são certificados por laboratório independente. Alterações no código exigem recertificação.</p>
+    </LegalLayout>
+  )
+}
+src/screens/legal/LicenseScreen.tsx
+
+tsx
+import LegalLayout from './LegalLayout'
+
+export default function LicenseScreen({ onBack }: { onBack: () => void }) {
+  return (
+    <LegalLayout title="Licença e regulador" onBack={onBack}>
+      <p>A BoraBet opera no Brasil em conformidade com a regulamentação vigente.</p>
+      <h3>Regulador</h3>
+      <p>Secretaria de Prêmios e Apostas (SPA) — Ministério da Fazenda.</p>
+      <h3>Licença</h3>
+      <p>Número da licença: a ser publicado após emissão.</p>
+      <h3>Contato regulatório</h3>
+      <p>Para questões regulatórias, entre em contato pelo suporte com o assunto "Regulatório".</p>
+      <h3>Idade mínima</h3>
+      <p>Proibido para menores de 18 anos.</p>
+    </LegalLayout>
+  )
+}
+src/screens/legal/AmlScreen.tsx
+
+tsx
+import LegalLayout from './LegalLayout'
+
+export default function AmlScreen({ onBack }: { onBack: () => void }) {
+  return (
+    <LegalLayout title="Política AML" onBack={onBack}>
+      <p>A BoraBet adota práticas de prevenção à lavagem de dinheiro e ao financiamento do terrorismo.</p>
+      <h3>Verificação de identidade</h3>
+      <p>Todos os jogadores passam por verificação progressiva antes de jogar com dinheiro real e antes do primeiro saque.</p>
+      <h3>Monitoramento</h3>
+      <ul>
+        <li>Análise de padrões de transação</li>
+        <li>Detecção de múltiplas contas e dispositivos</li>
+        <li>Sinais de conluio em jogos 1v1</li>
+        <li>Verificação de origem dos fundos para valores altos</li>
+      </ul>
+      <h3>Comunicação</h3>
+      <p>Atividades suspeitas são reportadas ao COAF conforme exigido por lei.</p>
+      <h3>Sanções</h3>
+      <p>Verificamos listas de sanções nacionais e internacionais.</p>
+    </LegalLayout>
+  )
+}
+src/screens/legal/ComplaintsScreen.tsx
+
+tsx
+import LegalLayout from './LegalLayout'
+
+export default function ComplaintsScreen({ onBack }: { onBack: () => void }) {
+  return (
+    <LegalLayout title="Reclamações" onBack={onBack}>
+      <p>Se você tem uma reclamação, queremos resolver.</p>
+      <h3>Como reclamar</h3>
+      <ul>
+        <li>Abra um ticket em Suporte com o assunto da sua reclamação</li>
+        <li>Inclua IDs de transação e capturas de tela quando possível</li>
+        <li>Prazo de resposta inicial: até 24 horas</li>
+      </ul>
+      <h3>Escalonamento</h3>
+      <p>Se não ficar satisfeito com a resposta, você pode solicitar revisão pela nossa equipe de compliance.</p>
+      <h3>Regulador</h3>
+      <p>Em última instância, você pode contatar a SPA / Ministério da Fazenda.</p>
+    </LegalLayout>
+  )
+}
+src/screens/legal/AboutScreen.tsx
+
+tsx
+import LegalLayout from './LegalLayout'
+
+export default function AboutScreen({ onBack }: { onBack: () => void }) {
+  return (
+    <LegalLayout title="Sobre a BoraBet" onBack={onBack}>
+      <p>A BoraBet é uma plataforma de cassino com jogos próprios, focada em oferecer poucos jogos, todos excelentes.</p>
+      <h3>Nossa promessa</h3>
+      <p>"Bora!" significa velocidade. Do toque no bot ao jogo rodando, são segundos.</p>
+      <h3>Nossos jogos</h3>
+      <p>Lançamos com dois jogos: Dominó 1v1 e Plinko. Cada um feito com cuidado, sem sensação de template.</p>
+      <h3>Fairness</h3>
+      <p>RNG certificado, sem jogadores falsos, sem vitórias falsas. Bots são sempre rotulados como "Bot".</p>
+      <h3>Jogo responsável</h3>
+      <p>18+. Ferramentas de limite, pausa e autoexclusão estão sempre disponíveis.</p>
+      <h3>Contato</h3>
+      <p>Suporte pelo app em Menu → Suporte.</p>
+    </LegalLayout>
+  )
+}
+16. Update src/screens/WalletScreen.tsx
+Add onWithdraw and onDeposit props. Only the top of the file changes:
+
+tsx
+interface Props {
+  onBack: () => void
+  onWithdraw: () => void
+  onDeposit: () => void
+}
+
+export default function WalletScreen({ onBack, onWithdraw, onDeposit }: Props) {
+Inside the component, right after the currency toggle and before the balance cards, add:
+
+tsx
+<div className="flex gap-3">
+  <button className="btn-yellow flex-1" style={{ height: 44, fontSize: 15 }} onClick={onDeposit}>
+    Depositar
+  </button>
+  <button className="btn-secondary flex-1" style={{ height: 44, fontSize: 15 }} onClick={onWithdraw}>
+    Sacar
+  </button>
+</div>
+17. Update src/screens/ProfileScreen.tsx
+Add new props and wire the action buttons. Replace the top of the file:
+
+tsx
+interface Props {
+  balance: number
+  onBack: () => void
+  onWallet: () => void
+  onFriends: () => void
+  onSettings: () => void
+  onResponsible: () => void
+  onSupport: () => void
+}
+
+export default function ProfileScreen({
+  balance, onBack, onWallet, onFriends, onSettings, onResponsible, onSupport,
+}: Props) {
+Then in the JSX, add a "More" section right before the responsible play card:
+
+tsx
+<div className="card" style={{ padding: 0 }}>
+  {[
+    { icon: '👥', label: 'Amigos e indicações', action: onFriends },
+    { icon: '🎧', label: 'Suporte', action: onSupport },
+    { icon: '⚙️', label: 'Configurações', action: onSettings },
+  ].map((item, i) => (
+    <button key={i} onClick={item.action}
+      className="flex items-center gap-3 w-full text-left"
+      style={{
+        padding: '14px 20px',
+        borderTop: i > 0 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+        background: 'none', border: 'none', cursor: 'pointer',
+      }}>
+      <span style={{ fontSize: 18 }}>{item.icon}</span>
+      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 14, color: '#FFFFFF', flex: 1 }}>
+        {item.label}
+      </span>
+      <span style={{ color: '#6E7691', fontSize: 16 }}>›</span>
+    </button>
+  ))}
+</div>
+And make the responsible play card clickable — change the wrapping <div> to a <button onClick={onResponsible}> with textAlign: 'left'.
+
+18. Update src/screens/HomeScreen.tsx
+Add a chat teaser + tournament card + promotions card so the new screens are reachable from Home. Add these two imports at the top:
+
+tsx
+import { MessageCircle } from 'lucide-react'
+Add these props to Props:
+
+tsx
+onChat: () => void
+onTournaments: () => void
+onPromotions: () => void
+And in the JSX, right before the responsible-play footer, insert:
+
+tsx
+{/* Tournament card */}
+<button className="fade-up fade-up-5 card w-full text-left" style={{ padding: 16, cursor: 'pointer' }} onClick={onTournaments}>
+  <div className="flex items-center justify-between mb-2">
+    <h3 style={{ fontFamily: 'Lilita One, cursive', fontSize: 16, color: '#FFFFFF' }}>
+      Torneio da semana
+    </h3>
+    <span style={{
+      fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#3DDB5F',
+      background: 'rgba(61,219,95,0.1)', padding: '3px 8px', borderRadius: 8,
+    }}>Ao vivo</span>
+  </div>
+  <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 13, color: '#A9B0C6', marginBottom: 8 }}>
+    Prêmio de 50.000 BC · 342 jogadores
+  </p>
+  <div className="progress-bar"><div className="progress-fill" style={{ width: '62%' }} /></div>
+</button>
+
+{/* Chat teaser */}
+<button className="fade-up fade-up-5 card w-full text-left" style={{ padding: 14, cursor: 'pointer' }} onClick={onChat}>
+  <div className="flex items-center gap-2 mb-3">
+    <MessageCircle size={16} color="#FFD93D" />
+    <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 13, color: '#FFFFFF' }}>
+      Chat global
+    </span>
+    <span className="live-dot" style={{ width: 6, height: 6, borderRadius: '50%', background: '#3DDB5F', display: 'inline-block', marginLeft: 'auto' }} />
+    <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#6E7691' }}>284 online</span>
+  </div>
+  {[
+    { avatar: '🦁', user: 'Carlos M.', text: 'Bora de dominó!' },
+    { avatar: '🌟', user: 'Fernanda L.', text: 'Ganhei 1.240 BC 🎉' },
+  ].map((m, i) => (
+    <div key={i} className="flex items-center gap-2 py-1">
+      <span style={{ fontSize: 18 }}>{m.avatar}</span>
+      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 12, color: '#FFFFFF' }}>{m.user}:</span>
+      <span style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#A9B0C6' }}>{m.text}</span>
+    </div>
+  ))}
+</button>
+
+{/* Promotions strip */}
+<button className="fade-up fade-up-5 card-sm flex items-center gap-3 w-full text-left" style={{ padding: 14, cursor: 'pointer' }} onClick={onPromotions}>
+  <span style={{ fontSize: 28 }}>🎁</span>
+  <div className="flex-1">
+    <p style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: 14, color: '#FFFFFF' }}>
+      Bônus de boas-vindas
+    </p>
+    <p style={{ fontFamily: 'Inter, sans-serif', fontSize: 12, color: '#A9B0C6', marginTop: 2 }}>
+      +10% no primeiro depósito
+    </p>
+  </div>
+  <span style={{ color: '#6E7691', fontSize: 16 }}>›</span>
+</button>
+And update the HomeScreen call in App.tsx:
+
+tsx
+<HomeScreen
+  balance={balance}
+  onPlay={() => navigate('lobby')}
+  onDeposit={() => navigate('deposit')}
+  onRanking={() => navigate('ranking')}
+  onChat={() => navigate('chat')}
+  onTournaments={() => navigate('tournaments')}
+  onPromotions={() => navigate('promotions')}
+/>
+19. Summary of what you now have
+Screen	File
+Splash	src/screens/SplashScreen.tsx ✓
+First-run	src/screens/FirstRunSheet.tsx ★new
+Home	src/screens/HomeScreen.tsx ✓ (updated)
+Games hub	src/screens/GamesHubScreen.tsx ★new
+Plinko	src/screens/PlinkoScreen.tsx ★new
+Domino lobby	src/screens/LobbyScreen.tsx ✓
+Match	src/screens/MatchScreen.tsx ✓
+Result	src/screens/ResultScreen.tsx ✓
+Ranking	src/screens/RankingScreen.tsx ✓
+Deposit	src/screens/DepositScreen.tsx ✓
+Withdraw	src/screens/WithdrawScreen.tsx ★new
+Wallet	src/screens/WalletScreen.tsx ✓ (updated)
+Rewards	src/screens/RewardsScreen.tsx ✓
+Tournaments	src/screens/TournamentsScreen.tsx ★new
+Promotions	src/screens/PromotionsScreen.tsx ★new
+Friends	src/screens/FriendsScreen.tsx ★new
+Chat	src/screens/ChatScreen.tsx ★new
+Profile	src/screens/ProfileScreen.tsx ✓ (updated)
+Notifications	src/screens/NotificationsScreen.tsx ★new
+Settings	src/screens/SettingsScreen.tsx ★new
+Responsible play	src/screens/ResponsiblePlayScreen.tsx ★new
+KYC	src/screens/KycScreen.tsx ★new
+Support	src/screens/SupportScreen.tsx ★new
+Legal ×9	src/screens/legal/* ★new
+Every new screen reuses the existing tokens, classes (btn-yellow, btn-green, btn-secondary, card, card-sm, progress-bar, progress-fill, live-dot, glow-pulse, sheet-backdrop), fonts, and components (DominoTile, OncaMascot). No new dependencies were added — everything uses lucide-react icons already in package.json.
+
+After copying, run pnpm dev. The app will boot to Splash → Home → and every button in the doc's page list is now reachable.
